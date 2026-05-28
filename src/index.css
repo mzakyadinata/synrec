@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colors */
+  --color-primary: #db1f2e;
+  --color-secondary: #ff3d3d;
+
+  /* Fonts */
+  --font-heading: "Montserrat", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-brand: "Space Grotesk", sans-serif;
+}
