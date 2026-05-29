@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",
+    "@vitalets/google-translate-api": "^9.2.1",
     "aos": "^2.3.4",
     "lucide-react": "^1.14.0",
     "react": "^19.2.6",

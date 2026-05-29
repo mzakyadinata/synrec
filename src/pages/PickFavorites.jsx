@@ -1,88 +1,199 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check } from "lucide-react";
+import { Check, PencilLine, X } from "lucide-react";
 import bgImage from "../assets/background.jpg";
 
-// Import film posters — add as many as you have in assets
-import film1 from "../assets/film1.jpg";
-import film2 from "../assets/film2.jpg";
-import film3 from "../assets/film3.jpg";
-import film4 from "../assets/film4.jpg";
-import film5 from "../assets/film5.jpg";
-import film6 from "../assets/film6.jpg";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-const films = [
-  { id: 1, title: "Film 1", poster: film1 },
-  { id: 2, title: "Film 2", poster: film2 },
-  { id: 3, title: "Film 3", poster: film3 },
-  { id: 4, title: "Film 4", poster: film4 },
-  { id: 5, title: "Film 5", poster: film5 },
-  { id: 6, title: "Film 6", poster: film6 },
+const synopsisTemplates = [
+  {
+    id: 1,
+    title: "Space Horror",
+    synopsis:
+      "After losing contact with Earth, a burned-out pilot wakes up alone on a mining station orbiting a frozen planet. The crew has vanished and the station AI insists everything is under control.",
+  },
+  {
+    id: 2,
+    title: "Crime Thriller",
+    synopsis:
+      "A former detective discovers a hidden network of corrupt politicians while investigating the disappearance of a journalist in a city ruled by fear and money.",
+  },
+  {
+    id: 3,
+    title: "Fantasy Adventure",
+    synopsis:
+      "A young girl discovers an ancient map leading to a forgotten kingdom where magic has been banned for centuries and dark creatures guard the final gate.",
+  },
+  {
+    id: 4,
+    title: "Psychological Drama",
+    synopsis:
+      "A lonely musician begins hearing mysterious voices in his unfinished songs after moving into an abandoned apartment once owned by a famous composer.",
+  },
+  {
+    id: 5,
+    title: "Sci-Fi Action",
+    synopsis:
+      "In a future controlled by artificial intelligence, a rebellious engineer steals a dangerous prototype capable of shutting down the entire surveillance system.",
+  },
+  {
+    id: 6,
+    title: "Mystery",
+    synopsis:
+      "Every year, the residents of a quiet village receive anonymous letters predicting crimes before they happen. This year, one letter mentions the mayor's death.",
+  },
 ];
 
-// Single film poster card
-function FilmCard({ film, selected, onToggle }) {
+function SynopsisCard({ item, selected, onSelect, disabled }) {
   return (
-    <div
-      onClick={() => onToggle(film.id)}
-      className="relative overflow-hidden cursor-pointer rounded-xl group"
-      style={{ aspectRatio: "2/3" }}
-    >
-      {/* Poster image */}
-      <img
-        src={film.poster}
-        alt={film.title}
-        className={`w-full h-full object-cover transition-all duration-300
-          ${
-            selected
-              ? "brightness-50 scale-[0.97]"
-              : "brightness-100 group-hover:brightness-75 group-hover:scale-[0.98]"
-          }
-        `}
-      />
-
-      {/* Selected border glow */}
-      <div
-        className={`absolute inset-0 rounded-xl transition-all duration-300 ${
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() => onSelect(item)}
+      className={`
+        relative text-left rounded-2xl border p-5 transition-all duration-300
+        backdrop-blur-md min-h-[240px]
+        ${
+          disabled
+            ? "opacity-40 cursor-not-allowed"
+            : "hover:scale-[1.02] hover:border-white/30"
+        }
+        ${
           selected
-            ? "ring-2 ring-secondary shadow-[0_0_16px_rgba(219,31,46,0.6)]"
-            : "ring-1 ring-white/10"
-        }`}
-      />
+            ? "border-secondary bg-white/10 shadow-[0_0_20px_rgba(219,31,46,0.35)]"
+            : "border-white/10 bg-white/5"
+        }
+      `}
+    >
+      <div className="flex items-start justify-between mb-4">
+        <h3 className="text-lg font-bold text-white font-heading">
+          {item.title}
+        </h3>
 
-      {/* Checkmark badge */}
-      <div
-        className={`absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center
-          transition-all duration-200
-          ${selected ? "opacity-100 scale-100" : "opacity-0 scale-75"}`}
-        style={{
-          background: "linear-gradient(135deg, #DB1F2E 0%, #FF3D3D 100%)",
-        }}
-      >
-        <Check size={13} strokeWidth={3} className="text-white" />
+        {selected && (
+          <div
+            className="w-7 h-7 rounded-full flex items-center justify-center"
+            style={{
+              background: "linear-gradient(135deg, #DB1F2E 0%, #FF3D3D 100%)",
+            }}
+          >
+            <Check size={14} strokeWidth={3} className="text-white" />
+          </div>
+        )}
       </div>
-    </div>
+
+      <p className="text-sm leading-7 text-white/70 font-body line-clamp-6">
+        {item.synopsis}
+      </p>
+    </button>
   );
 }
 
+const isValidSynopsis = (text) => {
+  const clean = text.trim();
+
+  if (clean.length < 30) return false;
+
+  const words = clean.split(/\s+/);
+
+  if (words.length < 5) return false;
+
+  const vowelCount = (clean.match(/[aiueo]/gi) || []).length;
+
+  if (vowelCount < 5) return false;
+
+  return true;
+};
+
 export default function PickFavorites() {
-  const [selected, setSelected] = useState([]);
   const navigate = useNavigate();
 
-  const toggleFilm = (id) => {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]
-    );
+  const [selectedSynopsis, setSelectedSynopsis] = useState(null);
+  const [customMode, setCustomMode] = useState(false);
+  const [customSynopsis, setCustomSynopsis] = useState("");
+  const [error, setError] = useState("");
+
+  const customSynopsisValid = useMemo(() => {
+    if (!customMode) return true;
+
+    return isValidSynopsis(customSynopsis);
+  }, [customMode, customSynopsis]);
+
+  const handleTemplateSelect = (item) => {
+    if (customMode) return;
+
+    setSelectedSynopsis(item);
   };
 
-  const handleContinue = () => {
-    // Navigate to home or dashboard after picking favorites
-    navigate("/recommendations");
+  const enableCustomMode = () => {
+    setSelectedSynopsis(null);
+    setCustomMode(true);
+    setError("");
+  };
+
+  const cancelCustomMode = () => {
+    setCustomMode(false);
+    setCustomSynopsis("");
+    setError("");
+  };
+
+  const handleContinue = async () => {
+    try {
+      let synopsis = "";
+
+      if (customMode) {
+        if (!customSynopsis.trim()) {
+          setError("Synopsis cannot be empty.");
+          return;
+        }
+
+        if (!customSynopsisValid) {
+          setError("Please enter a valid synopsis with meaningful sentences.");
+          return;
+        }
+
+        synopsis = customSynopsis;
+      } else {
+        if (!selectedSynopsis) return;
+
+        synopsis = selectedSynopsis.synopsis;
+      }
+
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(`${BASE_URL}/movies/recommend`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          synopsis,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch recommendations");
+      }
+      const data = await response.json();
+
+      console.log(data);
+
+      navigate("/pick-favorites/recommendations", {
+        state: {
+          movies: data.movies,
+        },
+      });
+    } catch (error) {
+      console.error(error);
+
+      setError("Failed to fetch recommendations.");
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] relative flex flex-col">
-      {/* Background image — blurred, dimmed */}
+    <div className="min-h-screen bg-[#0f0f0f] relative flex flex-col overflow-hidden">
+      {/* Background */}
       <div className="fixed inset-0 z-0">
         <img
           src={bgImage}
@@ -90,7 +201,7 @@ export default function PickFavorites() {
           className="object-cover w-full h-full"
           style={{ filter: "blur(2px) brightness(0.25)" }}
         />
-        {/* Vignette overlay */}
+
         <div
           className="absolute inset-0"
           style={{
@@ -101,44 +212,105 @@ export default function PickFavorites() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center flex-1 w-full px-5 pt-12 pb-32 md:pb-24">
-        {/* Header text */}
-        <div className="max-w-sm mb-8 text-center md:max-w-lg md:mb-10">
-          <h1 className="mb-3 text-4xl font-bold text-white font-heading md:text-4xl lg:text-5xl">
-            Pick Your Favorites
+      <div className="relative z-10 flex flex-col items-center flex-1 w-full px-5 pt-12 pb-36 md:pb-24">
+        <div className="max-w-2xl mb-8 text-center md:mb-10">
+          <h1 className="mb-3 text-4xl font-bold text-white font-heading lg:text-5xl">
+            Describe Your Movie Taste
           </h1>
-          <p className="text-sm font-body text-white/50 md:text-base">
-            Choose a few movies to get personalized recommendations
+
+          <p className="text-sm leading-7 font-body text-white/50 md:text-base">
+            Pick a synopsis template or write your own movie story idea to get
+            personalized recommendations.
           </p>
         </div>
 
-        {/* Film grid */}
-        <div className="w-full max-w-md md:max-w-3xl lg:max-w-5xl">
-          <div className="grid grid-cols-2 gap-10 md:grid-cols-3 lg:grid-cols-3 md:gap-15">
-            {films.map((film) => (
-              <FilmCard
-                key={film.id}
-                film={film}
-                selected={selected.includes(film.id)}
-                onToggle={toggleFilm}
+        {!customMode && (
+          <button
+            type="button"
+            onClick={enableCustomMode}
+            className="flex items-center gap-2 px-5 py-3 mb-8 text-sm font-semibold text-white transition-all border rounded-full border-white/15 bg-white/5 hover:bg-white/10"
+          >
+            <PencilLine size={17} />
+            Write Your Own Synopsis
+          </button>
+        )}
+
+        {customMode ? (
+          <div className="w-full max-w-3xl">
+            <div className="p-6 border backdrop-blur-md rounded-3xl border-white/10 bg-white/5">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-xl font-bold text-white font-heading">
+                  Custom Synopsis
+                </h2>
+
+                <button
+                  type="button"
+                  onClick={cancelCustomMode}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-white transition-all rounded-full bg-white/10 hover:bg-white/15"
+                >
+                  <X size={16} />
+                  Cancel
+                </button>
+              </div>
+
+              <textarea
+                value={customSynopsis}
+                onChange={(e) => {
+                  setCustomSynopsis(e.target.value);
+                  setError("");
+                }}
+                placeholder="Describe your movie idea in a few sentences..."
+                className="w-full h-56 p-5 text-white border outline-none resize-none rounded-2xl bg-black/30 border-white/10 placeholder:text-white/30"
               />
-            ))}
-          </div>
-        </div>
 
-        {/* Selection count hint */}
-        {selected.length > 0 && (
-          <p className="mt-6 text-xs font-body text-white/30">
-            {selected.length} movie{selected.length > 1 ? "s" : ""} selected
-          </p>
+              <div className="flex items-center justify-between mt-3">
+                <p className="text-xs text-white/35">
+                  {customSynopsis.length} / 1000 characters
+                </p>
+
+                {!customSynopsisValid && customSynopsis.length > 0 && (
+                  <p className="text-xs text-red-400">
+                    Please enter a meaningful synopsis.
+                  </p>
+                )}
+              </div>
+
+              <div className="mt-5 p-4 rounded-2xl bg-white/5 border border-white/10">
+                <p className="text-sm leading-7 text-white/60">
+                  Indonesian synopsis will be translated automatically into
+                  English before being sent to the recommendation model.
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="w-full max-w-md md:max-w-4xl lg:max-w-6xl">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {synopsisTemplates.map((item) => (
+                <SynopsisCard
+                  key={item.id}
+                  item={item}
+                  selected={selectedSynopsis?.id === item.id}
+                  onSelect={handleTemplateSelect}
+                  disabled={customMode}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div className="px-5 py-3 mt-6 text-sm text-red-300 border rounded-2xl border-red-500/30 bg-red-500/10">
+            {error}
+          </div>
         )}
       </div>
 
-      {/* Continue button — fixed at bottom, fades in when selection made */}
+      {/* Continue button */}
       <div
         className={`fixed bottom-0 left-0 right-0 z-20 px-6 pb-8 pt-6 transition-all duration-300
           ${
-            selected.length > 0
+            selectedSynopsis || customMode
               ? "opacity-100 translate-y-0"
               : "opacity-0 translate-y-6 pointer-events-none"
           }`}
@@ -149,8 +321,9 @@ export default function PickFavorites() {
         <div className="max-w-xs mx-auto md:max-w-sm">
           <button
             onClick={handleContinue}
+            disabled={customMode && !customSynopsisValid}
             className="w-full py-4 rounded-full font-heading font-bold text-white text-base
-              tracking-wide transition-all duration-200 active:scale-[0.98] hover:brightness-110"
+              tracking-wide transition-all duration-200 active:scale-[0.98] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
               background:
                 "linear-gradient(to right, #DB1F2ECC 0%, #FF3D3D 40%, #DB1F2ECC 100%)",

@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-// Floating film grain particle
 function GrainOverlay() {
   return (
     <div
@@ -15,7 +14,6 @@ function GrainOverlay() {
   );
 }
 
-// Animated film strip holes
 function FilmStrip({ side }) {
   const holes = Array.from({ length: 12 });
   return (
@@ -53,7 +51,6 @@ export default function NotFound() {
   const [glitch, setGlitch] = useState(false);
   const [countdown, setCountdown] = useState(10);
 
-  // Glitch effect trigger
   useEffect(() => {
     const glitchInterval = setInterval(() => {
       setGlitch(true);
@@ -62,7 +59,6 @@ export default function NotFound() {
     return () => clearInterval(glitchInterval);
   }, []);
 
-  // Auto redirect countdown
   useEffect(() => {
     if (countdown <= 0) {
       navigate("/");
@@ -77,41 +73,8 @@ export default function NotFound() {
       className="fixed inset-0 bg-[#0a0a0a] flex flex-col items-center justify-center overflow-hidden"
       style={{ fontFamily: "'Montserrat', sans-serif" }}
     >
-      <style>{`
-        @keyframes flicker {
-          0% { opacity: 0.4; }
-          100% { opacity: 1; }
-        }
-        @keyframes scanline {
-          0% { transform: translateY(-100%); }
-          100% { transform: translateY(100vh); }
-        }
-        @keyframes glitchX {
-          0% { transform: translateX(0); }
-          20% { transform: translateX(-4px); }
-          40% { transform: translateX(4px); }
-          60% { transform: translateX(-2px); }
-          80% { transform: translateX(2px); }
-          100% { transform: translateX(0); }
-        }
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(24px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes pulse-red {
-          0%, 100% { box-shadow: 0 0 20px rgba(219,31,46,0.3); }
-          50% { box-shadow: 0 0 40px rgba(219,31,46,0.7); }
-        }
-        .fade-up-1 { animation: fadeUp 0.6s ease forwards; animation-delay: 0.1s; opacity: 0; }
-        .fade-up-2 { animation: fadeUp 0.6s ease forwards; animation-delay: 0.3s; opacity: 0; }
-        .fade-up-3 { animation: fadeUp 0.6s ease forwards; animation-delay: 0.5s; opacity: 0; }
-        .fade-up-4 { animation: fadeUp 0.6s ease forwards; animation-delay: 0.7s; opacity: 0; }
-        .glitch { animation: glitchX 0.2s ease; }
-      `}</style>
-
       <GrainOverlay />
 
-      {/* Film strip sides — hidden on very small screens */}
       <div className="hidden sm:block">
         <FilmStrip side="left" />
         <FilmStrip side="right" />
@@ -127,7 +90,7 @@ export default function NotFound() {
         }}
       />
 
-      {/* Red ambient glow behind 404 */}
+      {/* Red ambient glow */}
       <div
         className="absolute w-64 h-64 rounded-full pointer-events-none md:w-96 md:h-96"
         style={{
@@ -137,9 +100,8 @@ export default function NotFound() {
         }}
       />
 
-      {/* Main content */}
       <div className="relative z-10 flex flex-col items-center px-8 text-center sm:px-16">
-        {/* 404 big number */}
+        {/* 404 */}
         <div
           className={`fade-up-1 select-none leading-none font-black mb-2 ${
             glitch ? "glitch" : ""
@@ -161,7 +123,6 @@ export default function NotFound() {
           404
         </div>
 
-        {/* Red divider line */}
         <div
           className="w-24 h-px mb-6 fade-up-2 md:w-32"
           style={{
@@ -170,7 +131,6 @@ export default function NotFound() {
           }}
         />
 
-        {/* Title */}
         <h1
           className="mb-3 font-bold text-white fade-up-2"
           style={{
@@ -183,7 +143,6 @@ export default function NotFound() {
           Scene Not Found
         </h1>
 
-        {/* Subtitle */}
         <p
           className="max-w-xs mb-10 leading-7 fade-up-3 text-white/40 md:max-w-sm"
           style={{
@@ -196,7 +155,6 @@ export default function NotFound() {
           looking for doesn't exist or has been moved.
         </p>
 
-        {/* Buttons */}
         <div className="flex flex-col items-center w-full max-w-xs gap-3 fade-up-4 sm:flex-row sm:max-w-none sm:w-auto">
           <button
             onClick={() => navigate("/")}
@@ -226,7 +184,6 @@ export default function NotFound() {
           </button>
         </div>
 
-        {/* Auto-redirect countdown */}
         <p
           className="mt-8 text-xs tracking-widest uppercase fade-up-4 text-white/20"
           style={{ fontFamily: "'Inter', sans-serif" }}
@@ -243,7 +200,6 @@ export default function NotFound() {
         </p>
       </div>
 
-      {/* Bottom brand */}
       <div
         className="absolute bottom-6 z-10 text-white/15 text-xs tracking-[0.3em] uppercase"
         style={{ fontFamily: "'Space Grotesk', sans-serif" }}

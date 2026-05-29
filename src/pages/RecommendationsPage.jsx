@@ -6,14 +6,14 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  LayoutDashboard,
 } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import recommendations from "../data/recommendations";
 
-const hero = recommendations[0];
-const carousel = recommendations.slice(1);
+const IMAGE_BASE = import.meta.env.VITE_TMDB_IMAGE_BASE_URL;
+const BACKDROP_BASE = import.meta.env.VITE_TMDB_BACKDROP_BASE_URL;
 
-// ── Star rating display ──
 function StarRating({ rating }) {
   return (
     <span className="flex items-center gap-1 text-sm font-medium text-yellow-400 font-body">
@@ -23,7 +23,6 @@ function StarRating({ rating }) {
   );
 }
 
-// ── Small icon action button ──
 function ActionBtn({ icon: Icon, active, onClick, label }) {
   return (
     <button
@@ -41,7 +40,6 @@ function ActionBtn({ icon: Icon, active, onClick, label }) {
   );
 }
 
-// ── Movie overlay card ──
 function MovieOverlay({ film, onClose }) {
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -49,19 +47,15 @@ function MovieOverlay({ film, onClose }) {
   if (!film) return null;
 
   return (
-    // Backdrop
     <div
       className="fixed inset-0 z-50 flex items-center justify-center px-4"
       style={{ background: "rgba(0,0,0,0.65)" }}
       onClick={onClose}
     >
-      {/* Card — stop propagation so clicking card doesn't close */}
       <div
-        className="relative bg-[#1a1a1a] border border-white/10 rounded-2xl overflow-hidden
-          w-full max-w-sm md:max-w-md shadow-2xl"
+        className="relative bg-[#1a1a1a] border border-white/10 rounded-2xl overflow-hidden w-full max-w-sm md:max-w-md shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button */}
         <button
           onClick={onClose}
           className="absolute z-10 flex items-center justify-center w-8 h-8 transition-colors border rounded-full top-3 right-3 bg-black/50 border-white/10 text-white/60 hover:text-white"
@@ -69,14 +63,13 @@ function MovieOverlay({ film, onClose }) {
           <X size={15} />
         </button>
 
-        {/* Poster */}
         <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
           <img
-            src={film.poster}
-            alt={film.title}
+            src={`${BACKDROP_BASE}${film.tmdb.backdrop_path}`}
+            alt={film.tmdb.title}
             className="object-cover w-full h-full"
           />
-          {/* Bottom gradient on poster */}
+
           <div
             className="absolute inset-0"
             style={{
@@ -86,26 +79,33 @@ function MovieOverlay({ film, onClose }) {
           />
         </div>
 
-        {/* Details */}
         <div className="relative z-10 px-5 pb-5 -mt-6">
           <h2 className="mb-1 text-xl font-bold text-white font-heading">
-            {film.title}
+            {film.tmdb.title}
           </h2>
 
-          {/* Meta row */}
-          <div className="flex items-center gap-3 mb-3">
-            <StarRating rating={film.rating} />
-            <span className="text-xs text-white/30 font-body">{film.year}</span>
+          <div className="flex items-center gap-3 mb-3 flex-wrap">
+            <StarRating rating={film.tmdb.vote_average.toFixed(1)} />
+
             <span className="text-xs text-white/30 font-body">
-              {film.genre}
+              {new Date(film.tmdb.release_date).getFullYear()}
+            </span>
+
+            <span className="text-xs text-white/30 font-body">
+              {film.tmdb.genres.join(" • ")}
             </span>
           </div>
 
           <p className="mb-5 text-sm leading-6 text-white/50 font-body">
-            {film.synopsis}
+            {film.tmdb.overview}
           </p>
 
-          {/* Actions */}
+          <div className="flex items-center justify-between mb-5">
+            <span className="text-sm font-semibold text-secondary">
+              {Math.round(film.similarity_score * 100)}% Match
+            </span>
+          </div>
+
           <div className="flex items-center gap-3">
             <button
               className="flex-1 py-2.5 rounded-full font-heading font-semibold text-white text-sm
@@ -117,12 +117,14 @@ function MovieOverlay({ film, onClose }) {
             >
               Watch Now
             </button>
+
             <ActionBtn
               icon={Bookmark}
               active={saved}
               onClick={() => setSaved((p) => !p)}
               label="Save"
             />
+
             <ActionBtn
               icon={Heart}
               active={liked}
@@ -136,7 +138,6 @@ function MovieOverlay({ film, onClose }) {
   );
 }
 
-// ── Carousel film card ──
 function CarouselCard({ film, onClick }) {
   return (
     <div
@@ -145,12 +146,11 @@ function CarouselCard({ film, onClick }) {
       style={{ aspectRatio: "2/3" }}
     >
       <img
-        src={film.poster}
-        alt={film.title}
-        className="w-full h-full object-cover transition-all duration-300
-          group-hover:brightness-75 group-hover:scale-[0.97]"
+        src={`${IMAGE_BASE}${film.tmdb.poster_path}`}
+        alt={film.tmdb.title}
+        className="w-full h-full object-cover transition-all duration-300 group-hover:brightness-75 group-hover:scale-[0.97]"
       />
-      {/* Bottom title fade */}
+
       <div
         className="absolute inset-0"
         style={{
@@ -158,23 +158,42 @@ function CarouselCard({ film, onClick }) {
             "linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 50%)",
         }}
       />
-      <p className="absolute text-xs font-semibold leading-4 text-white bottom-2 left-2 right-2 font-heading">
-        {film.title}
-      </p>
+
+      <div className="absolute bottom-2 left-2 right-2">
+        <p className="text-xs font-semibold leading-4 text-white font-heading">
+          {film.tmdb.title}
+        </p>
+
+        <p className="mt-1 text-[10px] text-secondary font-semibold">
+          {Math.round(film.similarity_score * 100)}% Match
+        </p>
+      </div>
     </div>
   );
 }
 
-// ── Main page ──
 export default function RecommendationsPage() {
   const [heroLiked, setHeroLiked] = useState(false);
   const [heroSaved, setHeroSaved] = useState(false);
   const [activeFilm, setActiveFilm] = useState(null);
+
   const carouselRef = useRef(null);
 
+  const navigate = useNavigate();
+  const { state } = useLocation();
+
+  const movies = state?.movies || [];
+
+  if (!movies.length) {
+    navigate("/pick-favorites");
+    return null;
+  }
+
+  const hero = movies[0];
+  const carousel = movies.slice(1);
+
   const scrollCarousel = (dir) => {
-    if (!carouselRef.current) return;
-    carouselRef.current.scrollBy({
+    carouselRef.current?.scrollBy({
       left: dir === "left" ? -320 : 320,
       behavior: "smooth",
     });
@@ -184,17 +203,30 @@ export default function RecommendationsPage() {
     <div className="min-h-screen bg-[#0f0f0f]">
       <Navbar />
 
-      {/* ── Hero section ── */}
+      {/* Dashboard button */}
+      <div className="fixed top-15 left-0 right-0 z-30 flex justify-end px-6 md:px-16 lg:px-24 pt-4 pointer-events-none">
+        <button
+          onClick={() => navigate("/")}
+          className="pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-full
+            font-heading font-semibold text-white text-sm tracking-wide
+            border border-white/20 bg-black/60 backdrop-blur-sm
+            transition-all duration-200 hover:bg-white/10 hover:border-white/40"
+        >
+          <LayoutDashboard size={15} />
+          Dashboard
+        </button>
+      </div>
+
+      {/* Hero */}
       <section className="relative w-full h-screen">
-        {/* Hero image */}
         <img
-          src={hero.poster}
-          alt={hero.title}
+          src={`${BACKDROP_BASE}${hero.tmdb.backdrop_path}`}
+          alt={hero.tmdb.title}
           className="absolute inset-0 object-cover w-full h-full"
         />
 
-        {/* Overlays */}
         <div className="absolute inset-0 bg-black/50" />
+
         <div
           className="absolute inset-0"
           style={{
@@ -202,6 +234,7 @@ export default function RecommendationsPage() {
               "linear-gradient(to top, #0f0f0f 0%, rgba(15,15,15,0.5) 40%, transparent 100%)",
           }}
         />
+
         <div
           className="absolute inset-0"
           style={{
@@ -210,35 +243,36 @@ export default function RecommendationsPage() {
           }}
         />
 
-        {/* Hero content */}
         <div
           className="relative z-10 flex flex-col justify-end h-full px-6 pb-16 md:px-16 lg:px-24 md:pb-20"
           style={{ minHeight: "90vh" }}
         >
-          <div className="max-w-lg">
-            {/* Genre badge */}
+          <div className="max-w-xl">
             <span className="inline-block mb-3 text-xs font-semibold tracking-widest uppercase font-body text-secondary">
-              {hero.genre}
+              {hero.tmdb.genres.join(" • ")}
             </span>
 
             <h1 className="mb-4 text-4xl font-bold leading-tight text-white font-heading md:text-5xl lg:text-6xl">
-              {hero.title}
+              {hero.tmdb.title}
             </h1>
 
             <p className="max-w-md mb-4 text-sm leading-7 font-body text-white/60 md:text-base">
-              {hero.synopsis}
+              {hero.tmdb.overview}
             </p>
 
-            {/* Meta */}
-            <div className="flex items-center gap-4 mb-6">
-              <StarRating rating={hero.rating} />
+            <div className="flex items-center gap-4 mb-6 flex-wrap">
+              <StarRating rating={hero.tmdb.vote_average.toFixed(1)} />
+
               <span className="text-sm text-white/40 font-body">
-                {hero.year}
+                {new Date(hero.tmdb.release_date).getFullYear()}
+              </span>
+
+              <span className="text-sm font-semibold text-secondary">
+                {Math.round(hero.similarity_score * 100)}% Match
               </span>
             </div>
 
-            {/* Buttons */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <button
                 className="px-8 py-3 rounded-full font-heading font-bold text-white text-sm
                   tracking-wide transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
@@ -249,15 +283,18 @@ export default function RecommendationsPage() {
               >
                 Watch Now
               </button>
+
               <button className="px-8 py-3 text-sm font-semibold tracking-wide transition-all duration-200 border rounded-full font-heading text-white/70 border-white/20 bg-white/5 hover:bg-white/10 hover:text-white">
                 Trailer
               </button>
+
               <ActionBtn
                 icon={Bookmark}
                 active={heroSaved}
                 onClick={() => setHeroSaved((p) => !p)}
                 label="Save"
               />
+
               <ActionBtn
                 icon={Heart}
                 active={heroLiked}
@@ -269,13 +306,13 @@ export default function RecommendationsPage() {
         </div>
       </section>
 
-      {/* ── Carousel section ── */}
+      {/* Carousel */}
       <section className="relative bg-[#0f0f0f] px-6 md:px-16 lg:px-24 py-12">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-xl font-bold text-white font-heading md:text-2xl">
             More For You
           </h2>
-          {/* Arrow buttons — desktop */}
+
           <div className="items-center hidden gap-2 md:flex">
             <button
               onClick={() => scrollCarousel("left")}
@@ -283,6 +320,7 @@ export default function RecommendationsPage() {
             >
               <ChevronLeft size={18} />
             </button>
+
             <button
               onClick={() => scrollCarousel("right")}
               className="flex items-center justify-center transition-all duration-200 border rounded-full w-9 h-9 border-white/20 bg-white/5 text-white/60 hover:text-white hover:border-white/40"
@@ -292,22 +330,23 @@ export default function RecommendationsPage() {
           </div>
         </div>
 
-        {/* Scrollable carousel */}
         <div
           ref={carouselRef}
           className="flex gap-3 pb-2 overflow-x-auto md:gap-4"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          {carousel.map((film) => (
-            <CarouselCard key={film.id} film={film} onClick={setActiveFilm} />
+          {carousel.map((film, index) => (
+            <CarouselCard
+              key={`${film.tmdb.id}-${index}`}
+              film={film}
+              onClick={setActiveFilm}
+            />
           ))}
         </div>
       </section>
 
-      {/* Footer spacing */}
       <div className="h-12 bg-[#0f0f0f]" />
 
-      {/* ── Movie overlay ── */}
       <MovieOverlay film={activeFilm} onClose={() => setActiveFilm(null)} />
     </div>
   );

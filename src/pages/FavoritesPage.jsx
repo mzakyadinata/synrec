@@ -53,7 +53,7 @@ export default function FavoritesPage() {
     <div className="min-h-screen bg-[#0f0f0f]">
       <Navbar />
 
-      <main className="pt-15 px-6 md:px-16 lg:px-24 py-12">
+      <main className="pt-25 px-6 md:px-16 lg:px-24 py-12">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
           <div>
