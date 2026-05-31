@@ -2,47 +2,11 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, PencilLine, X } from "lucide-react";
 import bgImage from "../assets/background.jpg";
+import LoadingScreen from "../components/LoadingScreen";
+import { writeLastRecommendations } from "../utils/recommendationCache";
+import { synopsisTemplates } from "../data/synopsisTemplate";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
-const synopsisTemplates = [
-  {
-    id: 1,
-    title: "Space Horror",
-    synopsis:
-      "After losing contact with Earth, a burned-out pilot wakes up alone on a mining station orbiting a frozen planet. The crew has vanished and the station AI insists everything is under control.",
-  },
-  {
-    id: 2,
-    title: "Crime Thriller",
-    synopsis:
-      "A former detective discovers a hidden network of corrupt politicians while investigating the disappearance of a journalist in a city ruled by fear and money.",
-  },
-  {
-    id: 3,
-    title: "Fantasy Adventure",
-    synopsis:
-      "A young girl discovers an ancient map leading to a forgotten kingdom where magic has been banned for centuries and dark creatures guard the final gate.",
-  },
-  {
-    id: 4,
-    title: "Psychological Drama",
-    synopsis:
-      "A lonely musician begins hearing mysterious voices in his unfinished songs after moving into an abandoned apartment once owned by a famous composer.",
-  },
-  {
-    id: 5,
-    title: "Sci-Fi Action",
-    synopsis:
-      "In a future controlled by artificial intelligence, a rebellious engineer steals a dangerous prototype capable of shutting down the entire surveillance system.",
-  },
-  {
-    id: 6,
-    title: "Mystery",
-    synopsis:
-      "Every year, the residents of a quiet village receive anonymous letters predicting crimes before they happen. This year, one letter mentions the mayor's death.",
-  },
-];
 
 function SynopsisCard({ item, selected, onSelect, disabled }) {
   return (
@@ -52,7 +16,7 @@ function SynopsisCard({ item, selected, onSelect, disabled }) {
       onClick={() => onSelect(item)}
       className={`
         relative text-left rounded-2xl border p-5 transition-all duration-300
-        backdrop-blur-md min-h-[240px]
+        backdrop-blur-md min-h-60
         ${
           disabled
             ? "opacity-40 cursor-not-allowed"
@@ -69,7 +33,6 @@ function SynopsisCard({ item, selected, onSelect, disabled }) {
         <h3 className="text-lg font-bold text-white font-heading">
           {item.title}
         </h3>
-
         {selected && (
           <div
             className="w-7 h-7 rounded-full flex items-center justify-center"
@@ -81,7 +44,6 @@ function SynopsisCard({ item, selected, onSelect, disabled }) {
           </div>
         )}
       </div>
-
       <p className="text-sm leading-7 text-white/70 font-body line-clamp-6">
         {item.synopsis}
       </p>
@@ -91,37 +53,27 @@ function SynopsisCard({ item, selected, onSelect, disabled }) {
 
 const isValidSynopsis = (text) => {
   const clean = text.trim();
-
   if (clean.length < 30) return false;
-
-  const words = clean.split(/\s+/);
-
-  if (words.length < 5) return false;
-
-  const vowelCount = (clean.match(/[aiueo]/gi) || []).length;
-
-  if (vowelCount < 5) return false;
-
+  if (clean.split(/\s+/).length < 5) return false;
+  if ((clean.match(/[aiueo]/gi) || []).length < 5) return false;
   return true;
 };
 
 export default function PickFavorites() {
   const navigate = useNavigate();
-
   const [selectedSynopsis, setSelectedSynopsis] = useState(null);
   const [customMode, setCustomMode] = useState(false);
   const [customSynopsis, setCustomSynopsis] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const customSynopsisValid = useMemo(() => {
     if (!customMode) return true;
-
     return isValidSynopsis(customSynopsis);
   }, [customMode, customSynopsis]);
 
   const handleTemplateSelect = (item) => {
     if (customMode) return;
-
     setSelectedSynopsis(item);
   };
 
@@ -138,58 +90,56 @@ export default function PickFavorites() {
   };
 
   const handleContinue = async () => {
-    try {
-      let synopsis = "";
+    let synopsis;
 
-      if (customMode) {
-        if (!customSynopsis.trim()) {
-          setError("Synopsis cannot be empty.");
-          return;
-        }
-
-        if (!customSynopsisValid) {
-          setError("Please enter a valid synopsis with meaningful sentences.");
-          return;
-        }
-
-        synopsis = customSynopsis;
-      } else {
-        if (!selectedSynopsis) return;
-
-        synopsis = selectedSynopsis.synopsis;
+    if (customMode) {
+      if (!customSynopsis.trim()) {
+        setError("Synopsis cannot be empty.");
+        return;
       }
+      if (!customSynopsisValid) {
+        setError("Please enter a valid synopsis with meaningful sentences.");
+        return;
+      }
+      synopsis = customSynopsis;
+    } else {
+      if (!selectedSynopsis) return;
+      synopsis = selectedSynopsis.synopsis;
+    }
 
+    setIsLoading(true);
+    setError("");
+
+    try {
       const token = localStorage.getItem("token");
-
       const response = await fetch(`${BASE_URL}/movies/recommend`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          synopsis,
-        }),
+        body: JSON.stringify({ synopsis }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch recommendations");
-      }
+      if (!response.ok) throw new Error("Failed to fetch recommendations");
       const data = await response.json();
 
-      console.log(data);
+      // Save to localStorage (replaces previous, 24h TTL handled by Dashboard)
+      writeLastRecommendations(data.movies);
 
       navigate("/pick-favorites/recommendations", {
-        state: {
-          movies: data.movies,
-        },
+        state: { movies: data.movies },
       });
-    } catch (error) {
-      console.error(error);
-
-      setError("Failed to fetch recommendations.");
+    } catch (err) {
+      console.error(err);
+      setError("Failed to fetch recommendations. Please try again.");
+      setIsLoading(false);
     }
   };
+
+  if (isLoading) {
+    return <LoadingScreen message="Finding your perfect movies..." />;
+  }
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] relative flex flex-col overflow-hidden">
@@ -201,7 +151,6 @@ export default function PickFavorites() {
           className="object-cover w-full h-full"
           style={{ filter: "blur(2px) brightness(0.25)" }}
         />
-
         <div
           className="absolute inset-0"
           style={{
@@ -217,7 +166,6 @@ export default function PickFavorites() {
           <h1 className="mb-3 text-4xl font-bold text-white font-heading lg:text-5xl">
             Describe Your Movie Taste
           </h1>
-
           <p className="text-sm leading-7 font-body text-white/50 md:text-base">
             Pick a synopsis template or write your own movie story idea to get
             personalized recommendations.
@@ -242,7 +190,6 @@ export default function PickFavorites() {
                 <h2 className="text-xl font-bold text-white font-heading">
                   Custom Synopsis
                 </h2>
-
                 <button
                   type="button"
                   onClick={cancelCustomMode}
@@ -252,7 +199,6 @@ export default function PickFavorites() {
                   Cancel
                 </button>
               </div>
-
               <textarea
                 value={customSynopsis}
                 onChange={(e) => {
@@ -262,19 +208,16 @@ export default function PickFavorites() {
                 placeholder="Describe your movie idea in a few sentences..."
                 className="w-full h-56 p-5 text-white border outline-none resize-none rounded-2xl bg-black/30 border-white/10 placeholder:text-white/30"
               />
-
               <div className="flex items-center justify-between mt-3">
                 <p className="text-xs text-white/35">
                   {customSynopsis.length} / 1000 characters
                 </p>
-
                 {!customSynopsisValid && customSynopsis.length > 0 && (
                   <p className="text-xs text-red-400">
                     Please enter a meaningful synopsis.
                   </p>
                 )}
               </div>
-
               <div className="mt-5 p-4 rounded-2xl bg-white/5 border border-white/10">
                 <p className="text-sm leading-7 text-white/60">
                   Indonesian synopsis will be translated automatically into

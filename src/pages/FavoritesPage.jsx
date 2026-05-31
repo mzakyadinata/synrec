@@ -1,53 +1,72 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Heart, ChevronRight, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-// import { useAuth } from "../context/useAuth";
-import recommendations from "../data/recommendations";
-import { StarRating, MovieOverlay } from "../components/MovieComponents";
+import MovieOverlay from "../components/MovieOverlay";
+import { useFavorites } from "../hooks/useFavorites";
+import { fetchFavorites } from "../services/movieApi";
+import { useAuth } from "../context/useAuth";
 
-const INITIAL_FAVORITES = new Set([1, 2, 3, 4, 5, 6, 7, 8]);
+const INITIAL_VISIBLE = 8;
 
-// How many to show initially (fills ~2 rows on most screens)
-const INITIAL_VISIBLE = 6;
+// Skeleton placeholder card
+function SkeletonCard() {
+  return (
+    <div
+      className="rounded-xl bg-white/5 animate-pulse"
+      style={{ aspectRatio: "2/3" }}
+    />
+  );
+}
 
 export default function FavoritesPage() {
   const navigate = useNavigate();
-  const [liked, setLiked] = useState(INITIAL_FAVORITES);
+  const { isLoggedIn } = useAuth();
+  const { isFavorited, toggleFavorite } = useFavorites();
+
+  const [favorites, setFavorites] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeFilm, setActiveFilm] = useState(null);
   const [removingId, setRemovingId] = useState(null);
   const [showAll, setShowAll] = useState(false);
 
-  const favorites = recommendations.filter((f) => liked.has(f.id));
-  const visibleFavorites = showAll
-    ? favorites
-    : favorites.slice(0, INITIAL_VISIBLE);
-  const hasMore = favorites.length > INITIAL_VISIBLE && !showAll;
+  // Load favorites from API
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    fetchFavorites()
+      .then((movies) => {
+        // normalise to common shape
+        const normalised = movies.map((m) => ({
+          id: m.movie_id,
+          title: m.title,
+          overview: m.overview,
+          poster_url: m.poster_url,
+          backdrop_url: m.backdrop_url,
+          vote_average: m.vote_average,
+          genres: m.genres,
+          release_date: m.release_date,
+        }));
+        setFavorites(normalised);
+      })
+      .catch((err) => console.error("FavoritesPage load error:", err))
+      .finally(() => setLoading(false));
+  }, [isLoggedIn]);
 
-  // Remove a film with animation
-  const handleUnlike = (id) => {
+  // When user unlikes a film, animate it out then remove from list
+  const handleUnlike = async (id) => {
     setRemovingId(id);
+    await toggleFavorite(id); // calls DELETE via useFavorites
     setTimeout(() => {
-      setLiked((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
+      setFavorites((prev) => prev.filter((f) => f.id !== id));
       setRemovingId(null);
       if (activeFilm?.id === id) setActiveFilm(null);
     }, 350);
   };
 
-  // Called from overlay — if unliked (isLiked = false), remove from list
-  const handleOverlayLikeChange = (id, isLiked) => {
-    if (!isLiked) {
-      handleUnlike(id);
-    }
-    // If liked again from overlay, add back
-    if (isLiked) {
-      setLiked((prev) => new Set([...prev, id]));
-    }
-  };
+  const visibleFavorites = showAll
+    ? favorites
+    : favorites.slice(0, INITIAL_VISIBLE);
+  const hasMore = favorites.length > INITIAL_VISIBLE && !showAll;
 
   return (
     <div className="min-h-screen bg-[#0f0f0f]">
@@ -71,16 +90,18 @@ export default function FavoritesPage() {
               </h1>
             </div>
             <p className="text-white/40 font-body text-sm ml-12">
-              {favorites.length} movie{favorites.length !== 1 ? "s" : ""} you
-              love
+              {loading
+                ? "Loading..."
+                : `${favorites.length} movie${
+                    favorites.length !== 1 ? "s" : ""
+                  } you love`}
             </p>
           </div>
-
           <button
-            onClick={() => navigate("/recommendations")}
+            onClick={() => navigate("/pick-favorites")}
             className="flex items-center gap-2 text-white/50 hover:text-white font-body text-sm transition-colors group self-start md:self-auto"
           >
-            Browse more
+            Get AI Recommendations
             <ChevronRight
               size={16}
               className="group-hover:translate-x-1 transition-transform"
@@ -88,8 +109,17 @@ export default function FavoritesPage() {
           </button>
         </div>
 
+        {/* Loading skeleton */}
+        {loading && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        )}
+
         {/* Empty state */}
-        {favorites.length === 0 && (
+        {!loading && favorites.length === 0 && (
           <div className="flex flex-col items-center justify-center py-32 text-center">
             <div
               className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
@@ -98,7 +128,7 @@ export default function FavoritesPage() {
                 border: "1px solid rgba(219,31,46,0.2)",
               }}
             >
-              <Heart size={28} className="text-[#ff3d3d]/50" />
+              <Heart size={28} className="text-secondary/50" />
             </div>
             <h2 className="font-heading font-bold text-white text-xl mb-2">
               No favorites yet
@@ -107,7 +137,7 @@ export default function FavoritesPage() {
               Like movies you enjoy and they'll show up here for easy access.
             </p>
             <button
-              onClick={() => navigate("/recommendations")}
+              onClick={() => navigate("/pick-favorites")}
               className="px-8 py-3 rounded-full font-heading font-semibold text-white text-sm
                 tracking-wide transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
               style={{
@@ -120,8 +150,8 @@ export default function FavoritesPage() {
           </div>
         )}
 
-        {/* Favorites grid */}
-        {favorites.length > 0 && (
+        {/* Grid */}
+        {!loading && favorites.length > 0 && (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {visibleFavorites.map((film) => (
@@ -136,15 +166,12 @@ export default function FavoritesPage() {
                     transition: "opacity 0.35s ease, transform 0.35s ease",
                   }}
                 >
-                  {/* Poster */}
                   <img
-                    src={film.poster}
+                    src={film.poster_url}
                     alt={film.title}
                     className="w-full h-full object-cover transition-all duration-300 group-hover:brightness-60 group-hover:scale-[0.98]"
                     onClick={() => setActiveFilm(film)}
                   />
-
-                  {/* Gradient */}
                   <div
                     className="absolute inset-0 pointer-events-none"
                     style={{
@@ -153,7 +180,7 @@ export default function FavoritesPage() {
                     }}
                   />
 
-                  {/* Heart button — always red (liked), click to unlike */}
+                  {/* Heart — always red, click = unlike */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -161,7 +188,7 @@ export default function FavoritesPage() {
                     }}
                     className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center
                       transition-all duration-200 opacity-0 group-hover:opacity-100
-                      bg-black/50 border border-[#ff3d3d] text-[#ff3d3d] hover:bg-[#ff3d3d] hover:text-white"
+                      bg-black/50 border border-secondary text-secondary hover:bg-secondary hover:text-white"
                     aria-label="Unlike"
                   >
                     <Heart size={14} fill="currentColor" />
@@ -177,16 +204,19 @@ export default function FavoritesPage() {
                     </p>
                     <div className="flex items-center justify-between">
                       <span className="text-white/40 font-body text-[10px]">
-                        {film.year}
+                        {film.release_date
+                          ? new Date(film.release_date).getFullYear()
+                          : ""}
                       </span>
-                      <StarRating rating={film.rating} />
+                      <span className="flex items-center gap-0.5 text-yellow-400 text-[10px] font-body font-medium">
+                        ★ {Number(film.vote_average).toFixed(1)}
+                      </span>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Show more button */}
             {hasMore && (
               <div className="flex justify-center mt-8">
                 <button
@@ -203,12 +233,11 @@ export default function FavoritesPage() {
         )}
       </main>
 
-      {/* Overlay — initialLiked=true since all films on this page are liked */}
       <MovieOverlay
         film={activeFilm}
         onClose={() => setActiveFilm(null)}
-        onLikeChange={handleOverlayLikeChange}
-        initialLiked={true}
+        isFavorited={activeFilm ? isFavorited(activeFilm.id) : false}
+        onToggleFavorite={(id) => handleUnlike(id)}
       />
     </div>
   );

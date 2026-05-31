@@ -2,7 +2,7 @@ import HeroSlider from "../components/landing-page/HeroSlider";
 import Navbar from "../components/Navbar";
 import AboutSection from "../components/landing-page/AboutSection";
 import FeaturesSection from "../components/landing-page/FeaturesSection";
-import HowItWorksSection from "../components/HowItWorksSection";
+import HowItWorksSection from "../components/landing-page/HowItWorksSection";
 
 function LandingPage() {
   return (

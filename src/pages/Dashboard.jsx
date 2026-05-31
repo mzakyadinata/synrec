@@ -1,125 +1,118 @@
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Sparkles,
-  ChevronLeft,
-  ChevronRight,
-  TrendingUp,
-  Star as StarIcon,
-} from "lucide-react";
+import { Sparkles, TrendingUp } from "lucide-react";
 import Navbar from "../components/Navbar";
+import FilmCarousel from "../components/FilmCarousel";
+import MovieOverlay from "../components/MovieOverlay";
 import { useAuth } from "../context/useAuth";
-import recommendations from "../data/recommendations";
-import { StarRating, MovieOverlay } from "../components/MovieComponents";
+import { useFavorites } from "../hooks/useFavorites";
+import { fetchPopularMovies } from "../services/movieApi";
+import {
+  readCache,
+  writeCache,
+  readLastRecommendations,
+} from "../utils/recommendationCache";
 
-const popularMovies = recommendations.map((film, i) => ({
-  ...film,
-  rank: i + 1,
-}));
-const lastRecommendations = [...recommendations].reverse();
-const topRated = [...recommendations].sort((a, b) => b.rating - a.rating);
+// ── localStorage helpers ──────────────────────────────────────
+const POPULAR_KEY = "neuroflix_popular";
+const POPULAR_TTL = 12 * 60 * 60 * 1000; // 12 hours
 
-function FilmCarousel({ films, onCardClick, showRank = false }) {
-  const ref = useRef(null);
-  const scroll = (dir) =>
-    ref.current?.scrollBy({
-      left: dir === "left" ? -320 : 320,
-      behavior: "smooth",
-    });
+// const RECS_KEY = "neuroflix_last_recommendations";
+// const RECS_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
-  return (
-    <div className="relative">
-      <div className="absolute right-0 -top-10 hidden md:flex items-center gap-2">
-        <button
-          onClick={() => scroll("left")}
-          className="w-8 h-8 rounded-full border border-white/20 bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:border-white/40 transition-all"
-        >
-          <ChevronLeft size={16} />
-        </button>
-        <button
-          onClick={() => scroll("right")}
-          className="w-8 h-8 rounded-full border border-white/20 bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:border-white/40 transition-all"
-        >
-          <ChevronRight size={16} />
-        </button>
-      </div>
+// function readCache(key, ttl) {
+//   try {
+//     const raw = localStorage.getItem(key);
+//     if (!raw) return null;
+//     const { data, savedAt } = JSON.parse(raw);
+//     if (Date.now() - savedAt > ttl) {
+//       localStorage.removeItem(key);
+//       return null;
+//     }
+//     return data;
+//   } catch {
+//     return null;
+//   }
+// }
 
-      <div
-        ref={ref}
-        className="flex gap-3 md:gap-4 overflow-x-auto pb-2"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-      >
-        {films.map((film) => (
-          <div
-            key={film.id}
-            onClick={() => onCardClick(film)}
-            className="relative flex-shrink-0 w-32 md:w-40 cursor-pointer group rounded-xl overflow-hidden"
-            style={{ aspectRatio: "2/3" }}
-          >
-            <img
-              src={film.poster}
-              alt={film.title}
-              className="w-full h-full object-cover transition-all duration-300 group-hover:brightness-75 group-hover:scale-[0.97]"
-            />
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 55%)",
-              }}
-            />
+// function writeCache(key, data) {
+//   localStorage.setItem(key, JSON.stringify({ data, savedAt: Date.now() }));
+// }
 
-            {showRank && (
-              <div
-                className="absolute top-2 left-2 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black font-heading text-white"
-                style={{
-                  background:
-                    film.rank <= 3
-                      ? "linear-gradient(135deg, #DB1F2E, #FF3D3D)"
-                      : "rgba(0,0,0,0.6)",
-                  border:
-                    film.rank <= 3
-                      ? "none"
-                      : "1px solid rgba(255,255,255,0.15)",
-                }}
-              >
-                {film.rank}
-              </div>
-            )}
+// export function readLastRecommendations() {
+//   return readCache(RECS_KEY, RECS_TTL);
+// }
 
-            <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/60 rounded-md px-1.5 py-0.5">
-              <StarIcon
-                size={10}
-                fill="#fbbf24"
-                strokeWidth={0}
-                className="text-yellow-400"
-              />
-              <span className="text-white text-[10px] font-body font-medium">
-                {film.rating}
-              </span>
-            </div>
+// export function writeLastRecommendations(movies) {
+//   writeCache(RECS_KEY, movies);
+// }
 
-            <p className="absolute bottom-2 left-2 right-2 text-xs font-semibold leading-4 text-white font-heading">
-              {film.title}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+// ─────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { isFavorited, toggleFavorite } = useFavorites();
+
+  const [popularMovies, setPopularMovies] = useState([]);
+  const [popularLoading, setPopularLoading] = useState(true);
+  const [lastRecs, setLastRecs] = useState(null); // null = expired/none, [] = empty, [...] = data
   const [activeFilm, setActiveFilm] = useState(null);
 
+  // Greeting
   const greeting = () => {
     const h = new Date().getHours();
     if (h < 12) return "Good morning";
     if (h < 17) return "Good afternoon";
     return "Good evening";
   };
+
+  // Load popular movies — cache 12h
+  useEffect(() => {
+    const cached = readCache(POPULAR_KEY, POPULAR_TTL);
+    if (cached) {
+      setPopularMovies(cached);
+      setPopularLoading(false);
+      return;
+    }
+    fetchPopularMovies()
+      .then((movies) => {
+        setPopularMovies(movies);
+        writeCache(POPULAR_KEY, movies);
+      })
+      .catch((err) => console.error("Popular movies error:", err))
+      .finally(() => setPopularLoading(false));
+  }, []);
+
+  // Load last recommendations from localStorage — check 24h TTL
+  useEffect(() => {
+    const data = readLastRecommendations();
+    // data is the movies array from the AI response
+    // each item: { rank, similarity_score, ml_title, tmdb: { id, title, poster_path, backdrop_path, ... } }
+    // normalise to the shape FilmCard/MovieOverlay expect
+    if (data) {
+      const normalised = data
+        .filter((m) => m.tmdb)
+        .map((m) => ({
+          id: m.tmdb.id,
+          title: m.tmdb.title,
+          overview: m.tmdb.overview,
+          poster_url: `${import.meta.env.VITE_TMDB_IMAGE_BASE_URL}${
+            m.tmdb.poster_path
+          }`,
+          backdrop_url: `${import.meta.env.VITE_TMDB_BACKDROP_BASE_URL}${
+            m.tmdb.backdrop_path
+          }`,
+          release_date: m.tmdb.release_date,
+          vote_average: m.tmdb.vote_average,
+          genres: m.tmdb.genres,
+          similarity_score: m.similarity_score,
+        }));
+      setLastRecs(normalised);
+    } else {
+      setLastRecs(null); // expired or never fetched
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0f0f0f]">
@@ -141,11 +134,11 @@ export default function Dashboard() {
               filter: "blur(40px)",
             }}
           />
-
           <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
             <div>
               <p className="text-white/40 font-body text-sm mb-1">
                 {greeting()}, {user?.fullname?.split(" ")[0] || user?.username}{" "}
+                👋
               </p>
               <h1 className="font-heading font-bold text-white text-3xl md:text-4xl mb-3">
                 Ready to discover
@@ -159,7 +152,7 @@ export default function Dashboard() {
 
             {/* AI CTA card */}
             <div
-              className="flex-shrink-0 rounded-2xl p-6 flex flex-col gap-4 w-full md:w-80"
+              className="shrink-0 rounded-2xl p-6 flex flex-col gap-4 w-full md:w-80"
               style={{
                 background:
                   "linear-gradient(135deg, rgba(219,31,46,0.15) 0%, rgba(26,26,26,0.9) 100%)",
@@ -169,7 +162,7 @@ export default function Dashboard() {
             >
               <div className="flex items-center gap-3">
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                   style={{
                     background: "linear-gradient(135deg, #DB1F2E, #FF3D3D)",
                   }}
@@ -206,23 +199,37 @@ export default function Dashboard() {
         {/* ── Popular Right Now ── */}
         <section className="px-6 md:px-16 lg:px-24 py-10">
           <div className="flex items-center gap-3 mb-5">
-            <TrendingUp size={18} className="text-[#ff3d3d]" />
+            <TrendingUp size={18} className="text-secondary" />
             <h2 className="font-heading font-bold text-white text-lg md:text-xl">
               Popular Right Now
             </h2>
             <span className="text-white/25 font-body text-xs ml-1">Top 10</span>
           </div>
-          <FilmCarousel
-            films={popularMovies}
-            onCardClick={setActiveFilm}
-            showRank
-          />
+          {popularLoading ? (
+            <div className="flex gap-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="shrink-0 w-32 md:w-40 rounded-xl bg-white/5 animate-pulse"
+                  style={{ aspectRatio: "2/3" }}
+                />
+              ))}
+            </div>
+          ) : (
+            <FilmCarousel
+              films={popularMovies}
+              onCardClick={setActiveFilm}
+              isFavorited={isFavorited}
+              onToggleFavorite={toggleFavorite}
+              showRank
+            />
+          )}
         </section>
 
         {/* ── Last Recommendation ── */}
-        <section className="px-6 md:px-16 lg:px-24 py-10">
+        <section className="px-6 md:px-16 lg:px-24 py-10 mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <Sparkles size={18} className="text-[#ff3d3d]" />
+            <Sparkles size={18} className="text-secondary" />
             <h2 className="font-heading font-bold text-white text-lg md:text-xl">
               Last Recommendation
             </h2>
@@ -230,30 +237,29 @@ export default function Dashboard() {
           <p className="text-white/30 font-body text-xs mb-5 ml-7">
             Latest picks generated by your AI
           </p>
-          <FilmCarousel
-            films={lastRecommendations}
-            onCardClick={setActiveFilm}
-          />
-        </section>
 
-        {/* ── Top Rated ── */}
-        <section className="px-6 md:px-16 lg:px-24 py-10 mb-8">
-          <div className="flex items-center gap-3 mb-5">
-            <StarIcon
-              size={18}
-              className="text-yellow-400"
-              fill="#fbbf24"
-              strokeWidth={0}
-            />
-            <h2 className="font-heading font-bold text-white text-lg md:text-xl">
-              Top Rated
-            </h2>
-          </div>
-          <FilmCarousel films={topRated} onCardClick={setActiveFilm} />
+          <FilmCarousel
+            films={lastRecs ?? []}
+            onCardClick={setActiveFilm}
+            isFavorited={isFavorited}
+            onToggleFavorite={toggleFavorite}
+            // 5 films fill the full width — each takes 1/5 of available space
+            cardWidth="w-[calc(20vw-1.5rem)] md:w-[calc(20%-1rem)] max-w-[180px] min-w-[120px]"
+            emptyMessage={
+              lastRecs === null
+                ? "Movie recommendations have been deleted because they are more than a day old. Please re-receive recommendations from the AI."
+                : undefined
+            }
+          />
         </section>
       </main>
 
-      <MovieOverlay film={activeFilm} onClose={() => setActiveFilm(null)} />
+      <MovieOverlay
+        film={activeFilm}
+        onClose={() => setActiveFilm(null)}
+        isFavorited={activeFilm ? isFavorited(activeFilm.id) : false}
+        onToggleFavorite={toggleFavorite}
+      />
     </div>
   );
 }
