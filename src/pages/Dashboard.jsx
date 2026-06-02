@@ -30,10 +30,11 @@ export default function Dashboard() {
 
   // Greeting
   const greeting = () => {
-    const h = new Date().getHours();
-    if (h < 12) return "Good morning";
-    if (h < 17) return "Good afternoon";
-    return "Good evening";
+    const hours = new Date().getHours();
+    if (hours >= 5 && hours < 12) return "Good Morning";
+    if (hours >= 12 && hours < 17) return "Good Afternoon";
+    if (hours >= 17 && hours < 21) return "Good Evening";
+    return "Good Night";
   };
 
   // Load popular movies — cache 12h
