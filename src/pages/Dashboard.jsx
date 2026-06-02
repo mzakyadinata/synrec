@@ -12,42 +12,11 @@ import {
   writeCache,
   readLastRecommendations,
 } from "../utils/recommendationCache";
+import { Typewriter } from "react-simple-typewriter";
 
 // ── localStorage helpers ──────────────────────────────────────
 const POPULAR_KEY = "neuroflix_popular";
 const POPULAR_TTL = 12 * 60 * 60 * 1000; // 12 hours
-
-// const RECS_KEY = "neuroflix_last_recommendations";
-// const RECS_TTL = 24 * 60 * 60 * 1000; // 24 hours
-
-// function readCache(key, ttl) {
-//   try {
-//     const raw = localStorage.getItem(key);
-//     if (!raw) return null;
-//     const { data, savedAt } = JSON.parse(raw);
-//     if (Date.now() - savedAt > ttl) {
-//       localStorage.removeItem(key);
-//       return null;
-//     }
-//     return data;
-//   } catch {
-//     return null;
-//   }
-// }
-
-// function writeCache(key, data) {
-//   localStorage.setItem(key, JSON.stringify({ data, savedAt: Date.now() }));
-// }
-
-// export function readLastRecommendations() {
-//   return readCache(RECS_KEY, RECS_TTL);
-// }
-
-// export function writeLastRecommendations(movies) {
-//   writeCache(RECS_KEY, movies);
-// }
-
-// ─────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -115,7 +84,7 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f]">
+    <div className="h-max bg-[#0f0f0f]">
       <Navbar />
 
       <main className="pt-15">
@@ -135,10 +104,9 @@ export default function Dashboard() {
             }}
           />
           <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
-            <div>
+            {/* <div>
               <p className="text-white/40 font-body text-sm mb-1">
-                {greeting()}, {user?.fullname?.split(" ")[0] || user?.username}{" "}
-                👋
+                {greeting()}, {user?.fullname?.split(" ")[0] || user?.username}
               </p>
               <h1 className="font-heading font-bold text-white text-3xl md:text-4xl mb-3">
                 Ready to discover
@@ -148,6 +116,30 @@ export default function Dashboard() {
                 Your AI-powered recommendations are waiting. The more you
                 explore, the smarter it gets.
               </p>
+            </div> */}
+            <div data-aos="fade-up">
+              <p className="font-heading font-semibold text-xl md:text-2xl mb-3">
+                <span className="bg-linear-to-r from-red-400 to-red-600 bg-clip-text text-transparent">
+                  <Typewriter
+                    words={[
+                      `${greeting()}, ${
+                        user?.fullname?.split(" ")[0] || user?.username
+                      }`,
+                    ]}
+                    loop={1}
+                    cursor
+                    cursorStyle="|"
+                    typeSpeed={70}
+                    deleteSpeed={50}
+                  />
+                </span>
+              </p>
+
+              <h1 className="font-heading font-bold text-white/90 text-2xl md:text-4xl leading-tight">
+                Ready to discover
+                <br />
+                something new?
+              </h1>
             </div>
 
             {/* AI CTA card */}
@@ -227,7 +219,7 @@ export default function Dashboard() {
         </section>
 
         {/* ── Last Recommendation ── */}
-        <section className="px-6 md:px-16 lg:px-24 py-10 mb-8">
+        <section className="px-6 md:px-16 lg:px-24 py-10 ">
           <div className="flex items-center gap-3 mb-2">
             <Sparkles size={18} className="text-secondary" />
             <h2 className="font-heading font-bold text-white text-lg md:text-xl">

@@ -10,7 +10,6 @@ import {
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
-import logo from "../assets/logos/logo-brand.svg";
 
 const guestLinks = [
   { icon: Home, label: "Home", scrollId: null, path: null },
@@ -90,7 +89,7 @@ export default function Navbar() {
         ref={headerRef}
         className={`${
           scrolled ? "bg-black" : "bg-[#0f0f0f]/80"
-        } w-screen h-15 z-50 fixed top-0 left-0 border-b border-gray-800 flex items-center px-4 transition-colors duration-300`}
+        } w-screen h-15 z-50 fixed top-0 left-0 border-b border-gray-800 flex items-center justify-between px-4 transition-colors duration-300`}
       >
         {/* Left: burger (mobile) + logo */}
         <div className="flex items-center gap-1 mr-4">
@@ -103,9 +102,9 @@ export default function Navbar() {
           </button>
           <div className="md:hidden w-px h-9 bg-gray-300/50" />
           <img
-            src={logo}
+            src="/brand-logo.svg"
             alt="Neuroflix Logo"
-            className="ml-2 cursor-pointer"
+            className="ml-2 w-35 cursor-pointer"
             onClick={() => navigate("/")}
           />
         </div>
@@ -133,23 +132,58 @@ export default function Navbar() {
         <div className="flex items-center gap-2  mr-3">
           {isLoggedIn ? (
             <>
-              <span className="hidden md:block text-white/40 font-body text-xs mr-1">
-                {user?.username}
-              </span>
+              {/* Desktop */}
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-white/70 text-sm
-                  border border-white/15 hover:bg-white/10 hover:text-white transition-all duration-200"
+                className="
+        hidden md:flex items-center gap-3
+        px-3 py-2 rounded-full
+        border border-white/10
+        bg-white/2
+        hover:bg-white/6
+        hover:border-red-500/30
+        transition-all duration-200
+      "
               >
-                <LogOut size={15} />
-                <span className="hidden md:inline">Logout</span>
+                <div className="w-8 h-8 rounded-full bg-linear-to-br from-red-500 to-red-700 flex items-center justify-center">
+                  <span className="text-white text-sm font-semibold">
+                    {user?.username?.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+
+                <div className="flex flex-col items-start">
+                  <span className="text-white/80 text-sm font-medium leading-none">
+                    {user?.username}
+                  </span>
+                  <span className="text-white/40 text-[11px]">Logout</span>
+                </div>
+
+                <LogOut size={15} className="text-white/40" />
               </button>
+
+              {/* Mobile */}
+              <div
+                className="
+        flex md:hidden items-center gap-2
+        px-2 py-1 rounded-full
+      "
+              >
+                <div className="w-8 h-8 rounded-full bg-linear-to-br from-red-500 to-red-700 flex items-center justify-center">
+                  <span className="text-white text-sm font-semibold">
+                    {user?.username?.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+
+                <span className="text-white/80 text-sm font-medium max-w-22.5 truncate">
+                  {user?.username}
+                </span>
+              </div>
             </>
           ) : (
             <Link
               to="/signin"
               className="px-5 py-2 rounded-full font-semibold text-white text-sm tracking-wide
-                transition-all duration-200 active:scale-95 hover:brightness-110"
+      transition-all duration-200 active:scale-95 hover:brightness-110"
               style={{
                 background:
                   "linear-gradient(to right, #DB1F2ECC 0%, #FF3D3D 29%, #FF3D3DE6 68%, #DB1F2ECC 100%)",

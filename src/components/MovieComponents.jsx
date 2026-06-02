@@ -24,7 +24,7 @@ export function ActionBtn({
       className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all duration-200
         ${
           active
-            ? "border-[#ff3d3d] bg-[#ff3d3d]/20 text-[#ff3d3d]"
+            ? "border-secondary bg-secondary/20 text-secondary"
             : "border-white/20 bg-white/5 text-white/50 hover:border-white/50 hover:text-white"
         }`}
     >
