@@ -9,7 +9,7 @@ function LandingPage() {
     <>
       <Navbar />
 
-      <main className="z-10 bg-[#0f0f0f] space-y-20">
+      <main className="z-10 bg-[#0f0f0f] space-y-20 overflow-x-hidden">
         <HeroSlider />
         {/* About  */}
         <AboutSection />
