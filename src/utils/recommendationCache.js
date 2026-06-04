@@ -1,4 +1,4 @@
-const RECS_KEY = "neuroflix_last_recommendations";
+const RECS_KEY = "synrec_last_recommendations";
 const RECS_TTL = 24 * 60 * 60 * 1000;
 
 export function readCache(key, ttl) {

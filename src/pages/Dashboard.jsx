@@ -15,7 +15,7 @@ import {
 import { Typewriter } from "react-simple-typewriter";
 
 // ── localStorage helpers ──────────────────────────────────────
-const POPULAR_KEY = "neuroflix_popular";
+const POPULAR_KEY = "synrec_popular";
 const POPULAR_TTL = 12 * 60 * 60 * 1000; // 12 hours
 
 export default function Dashboard() {
