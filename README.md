@@ -188,8 +188,8 @@ Landing Page (guest)
 
 ## Related Repositories
 
-- **Backend** — [synrec-backend](https://github.com/your-username/synrec-backend)
-- **ML Model** — [synrec-model](https://github.com/your-username/synrec-model)
+- **Backend** — [synrec-backend](https://github.com/faiztzy/film-backend.git)
+- **ML Model** — [synrec-model](https://github.com/mzakyadinata/movie-model-service.git)
 
 ---
 
