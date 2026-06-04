@@ -79,7 +79,7 @@ export function AuthButton({
 // Auth layout wrapper
 export default function AuthLayout({ children, title, subtitle }) {
   return (
-    <div className="h-screen bg-[#0f0f0f] flex">
+    <div className="h-screen bg-[#0f0f0f] flex ">
       {/* ── Desktop: left image panel ── */}
       <div className="relative hidden w-1/2 overflow-hidden md:block">
         <img
@@ -101,12 +101,12 @@ export default function AuthLayout({ children, title, subtitle }) {
               "linear-gradient(to bottom, #0f0f0f 0%, transparent 25%, transparent 75%, #0f0f0f 100%)",
           }}
         />
-        <div className="absolute z-10 bottom-10 left-10">
+        <div className="absolute z-10 bottom-10 left-10  ">
           <Link
             to="/"
             className="text-sm transition-colors text-white/30 font-brand hover:text-white/60"
           >
-            ← Back to NeuroFlix
+            ← Back to Synrec
           </Link>
         </div>
       </div>
@@ -133,9 +133,9 @@ export default function AuthLayout({ children, title, subtitle }) {
           to="/"
           className="absolute z-10 text-xs transition-colors md:hidden top-6 left-6 text-white/40 font-body hover:text-white/70"
         >
-          ← NeuroFlix
+          ← Synrec
         </Link>
-        <div className="w-full max-w-sm mx-auto md:mx-0">
+        <div className="w-full max-w-sm mx-auto md:mx-0 ">
           <h1 className="mb-2 text-3xl font-bold text-white font-heading md:text-4xl">
             {title}
           </h1>

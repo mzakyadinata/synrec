@@ -114,11 +114,11 @@ export default function RecommendationsPage() {
                   ? new Date(hero.release_date).getFullYear()
                   : ""}
               </span>
-              {hero.similarity_score != null && (
+              {/* {hero.similarity_score != null && (
                 <span className="text-sm font-semibold text-secondary font-body">
                   {Math.round(hero.similarity_score * 100)}% Match
                 </span>
-              )}
+              )} */}
             </div>
 
             <div className="flex items-center flex-wrap gap-3">
@@ -190,7 +190,7 @@ export default function RecommendationsPage() {
                 isFavorited={isFavorited(film.id)}
                 onToggleFavorite={toggleFavorite}
                 onClick={setActiveFilm}
-                matchScore={film.similarity_score}
+                // matchScore={film.similarity_score}
               />
             ))}
           </div>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import avenger from "../../assets/avenger.jpg";
 import interstellar from "../../assets/interstellar.jpg";
 import zootopia from "../../assets/zootopia.jpg";
+import { Link } from "react-router-dom";
 
 const slides = [
   {
@@ -126,7 +127,8 @@ export default function HeroSlider() {
           </p>
 
           {/* Button */}
-          <button
+          <Link
+            to="/signup"
             className="px-10 py-4 text-base font-semibold tracking-wide text-white transition-all duration-200 rounded-full active:scale-95 hover:brightness-110"
             style={{
               background:
@@ -134,7 +136,7 @@ export default function HeroSlider() {
             }}
           >
             Get Started
-          </button>
+          </Link>
         </div>
 
         {/* Slide indicators with progress bar */}

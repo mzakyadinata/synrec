@@ -15,7 +15,7 @@ export default function FilmCard({
   onClick,
   rank,
   matchScore,
-  cardWidth = "w-32 md:w-40",
+  cardWidth = "w-35 md:w-50",
 }) {
   const year =
     film.year ||

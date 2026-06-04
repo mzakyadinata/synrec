@@ -92,7 +92,7 @@ export default function SignUp() {
           </AuthButton>
         </div>
 
-        <p className="mt-16 text-sm text-center text-white/30 font-body">
+        <p className="mt-5 text-sm text-center text-white/30 font-body">
           Already have an account?{" "}
           <Link
             to="/signin"

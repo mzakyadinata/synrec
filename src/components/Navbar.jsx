@@ -3,13 +3,14 @@ import {
   Home,
   Info,
   Sparkles,
-  Search,
+  // Search,
   Heart,
   LogOut,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import ConfirmDialog from "./ConfirmDialog";
 
 const guestLinks = [
   { icon: Home, label: "Home", scrollId: null, path: null },
@@ -19,13 +20,14 @@ const guestLinks = [
 
 const authLinks = [
   { icon: Home, label: "Home", scrollId: null, path: "/" },
-  { icon: Search, label: "Search", scrollId: null, path: "/search" },
+  // { icon: Search, label: "Search", scrollId: null, path: "/search" },
   { icon: Heart, label: "Favorites", scrollId: null, path: "/favorites" },
 ];
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const headerRef = useRef(null);
   const { isLoggedIn, logout, user } = useAuth();
   const navigate = useNavigate();
@@ -55,7 +57,6 @@ export default function Navbar() {
       return;
     }
 
-    // Scroll behavior for guest links
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         if (!scrollId) {
@@ -76,7 +77,15 @@ export default function Navbar() {
     });
   };
 
-  const handleLogout = () => {
+  // Show confirmation dialog instead of logging out immediately
+  const handleLogoutClick = () => {
+    setShowSidebar(false);
+    setShowLogoutConfirm(true);
+  };
+
+  // Called when user confirms logout
+  const handleLogoutConfirm = () => {
+    setShowLogoutConfirm(false);
     logout();
     navigate("/");
   };
@@ -89,7 +98,7 @@ export default function Navbar() {
         ref={headerRef}
         className={`${
           scrolled ? "bg-black" : "bg-[#0f0f0f]/80"
-        } w-screen h-15 z-50 fixed top-0 left-0 border-b border-gray-800 flex items-center justify-between px-4 transition-colors duration-300`}
+        } w-screen h-15 z-50 fixed top-0 left-0 border-b border-gray-800 flex items-center px-4 transition-colors duration-300`}
       >
         {/* Left: burger (mobile) + logo */}
         <div className="flex items-center gap-1 mr-4">
@@ -103,8 +112,8 @@ export default function Navbar() {
           <div className="md:hidden w-px h-9 bg-gray-300/50" />
           <img
             src="/brand-logo.svg"
-            alt="Neuroflix Logo"
-            className="ml-2 w-35 cursor-pointer"
+            alt="Synrec Logo"
+            className="ml-2 cursor-pointer w-35"
             onClick={() => navigate("/")}
           />
         </div>
@@ -115,7 +124,7 @@ export default function Navbar() {
             <li key={link.label}>
               <button
                 onClick={() => handleNavClick(link)}
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 cursor-pointer
                   ${
                     isActiveLink(link.path)
                       ? "text-white bg-white/10"
@@ -129,12 +138,12 @@ export default function Navbar() {
         </ul>
 
         {/* Right: auth */}
-        <div className="flex items-center gap-2  mr-3">
+        <div className="flex items-center gap-2 mr-3">
           {isLoggedIn ? (
             <>
               {/* Desktop */}
               <button
-                onClick={handleLogout}
+                onClick={handleLogoutClick}
                 className="
         hidden md:flex items-center gap-3
         px-3 py-2 rounded-full
@@ -174,7 +183,7 @@ export default function Navbar() {
                   </span>
                 </div>
 
-                <span className="text-white/80 text-sm font-medium max-w-22.5 truncate">
+                <span className="text-white/80 text-sm font-medium max-w-[90px] truncate">
                   {user?.username}
                 </span>
               </div>
@@ -234,7 +243,7 @@ export default function Navbar() {
         {isLoggedIn && (
           <div className="px-5">
             <button
-              onClick={handleLogout}
+              onClick={handleLogoutClick}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-white/60
                 hover:text-white hover:bg-white/10 transition-all duration-200 font-medium text-sm"
             >
@@ -244,6 +253,17 @@ export default function Navbar() {
           </div>
         )}
       </nav>
+
+      {/* Logout confirmation dialog */}
+      <ConfirmDialog
+        isOpen={showLogoutConfirm}
+        title="Log out?"
+        message="You'll need to sign in again to access your recommendations and favorites."
+        confirmLabel="Log Out"
+        cancelLabel="Stay"
+        onConfirm={handleLogoutConfirm}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
     </>
   );
 }

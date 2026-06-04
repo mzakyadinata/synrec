@@ -105,19 +105,7 @@ export default function Dashboard() {
             }}
           />
           <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
-            {/* <div>
-              <p className="text-white/40 font-body text-sm mb-1">
-                {greeting()}, {user?.fullname?.split(" ")[0] || user?.username}
-              </p>
-              <h1 className="font-heading font-bold text-white text-3xl md:text-4xl mb-3">
-                Ready to discover
-                <br className="hidden md:block" /> something new?
-              </h1>
-              <p className="text-white/40 font-body text-sm max-w-md">
-                Your AI-powered recommendations are waiting. The more you
-                explore, the smarter it gets.
-              </p>
-            </div> */}
+            {/* Greeting */}
             <div data-aos="fade-up">
               <p className="font-heading font-semibold text-xl md:text-2xl mb-3">
                 <span className="bg-linear-to-r from-red-400 to-red-600 bg-clip-text text-transparent">
@@ -236,8 +224,7 @@ export default function Dashboard() {
             onCardClick={setActiveFilm}
             isFavorited={isFavorited}
             onToggleFavorite={toggleFavorite}
-            // 5 films fill the full width — each takes 1/5 of available space
-            cardWidth="w-[calc(20vw-1.5rem)] md:w-[calc(20%-1rem)] max-w-[180px] min-w-[120px]"
+            // cardWidth="w-[calc(20vw-1.5rem)] md:w-[calc(20%-1rem)] max-w-[180px] min-w-[120px]"
             emptyMessage={
               lastRecs === null
                 ? "Movie recommendations have been deleted because they are more than a day old. Please re-receive recommendations from the AI."
