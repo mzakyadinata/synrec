@@ -165,7 +165,7 @@ Landing Page (guest)
 ## How the AI Recommendation Works
 
 1. User picks a synopsis template or writes their own
-2. If Indonesian is detected → auto-translated to English via [MyMemory API](https://mymemory.translated.net/)
+2. If Indonesian is detected → auto-translated to English via [MyMemory API](https://mymemory.translated.net/doc/spec.php)
 3. Backend validates the synopsis (min length, gibberish detection, profanity filter, similarity threshold)
 4. Synopsis sent to the Python ML model service
 5. Model returns top 5 movies ranked by cosine similarity score
