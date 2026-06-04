@@ -23,7 +23,7 @@ function LandingPage() {
         {/* Footer */}
         <footer className="bg-[#0f0f0f] border-t border-white/10 px-8 py-6 text-center">
           <p className="text-xs text-white/30 font-body">
-            © 2026 NeuroFlix. Powered by AI movie recommendations.
+            © 2026 Synrec. Powered by AI movie recommendations.
           </p>
         </footer>
       </main>

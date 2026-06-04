@@ -33,7 +33,7 @@ export default function AboutSection() {
         {/* Title */}
         <div data-aos="fade-up" data-aos-delay="150">
           <h2 className="text-3xl font-bold text-white md:text-4xl font-heading">
-            About NeuroFlix
+            About Synrec
           </h2>
         </div>
 
@@ -104,7 +104,7 @@ export default function AboutSection() {
         data-aos="fade-left"
         data-aos-delay="100"
         className="inset-0 md:block hidden absolute h-full w-[55%] right-0 object-cover z-10"
-        alt="About NeuroFlix"
+        alt="About Synrec"
       />
     </section>
   );

@@ -204,7 +204,7 @@ export default function NotFound() {
         className="absolute bottom-6 z-10 text-white/15 text-xs tracking-[0.3em] uppercase"
         style={{ fontFamily: "'Space Grotesk', sans-serif" }}
       >
-        NeuroFlix
+        Synrec
       </div>
     </div>
   );
