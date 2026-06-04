@@ -1,9 +1,9 @@
 import AboutImage from "../../assets/about.jpg";
 
 const stats = [
-  { value: "10K+", label: "Movies" },
-  { value: "50+", label: "Genres" },
-  { value: "98%", label: "Match Rate" },
+  { value: "5K+", label: "Movies" },
+  { value: "AI", label: "Powered" },
+  { value: "2", label: "Language" },
 ];
 
 export default function AboutSection() {
@@ -40,13 +40,12 @@ export default function AboutSection() {
         {/* Paragraph */}
         <div data-aos="fade-up" data-aos-delay="300">
           <p className="leading-7 text-white/60 font-body text-md md:text-lg">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus
-            pharetra lacus tincidunt ex ornare, non sodales sem elementum. Fusce
-            egestas efficitur metus, non malesuada orci aliquet vitae. Cras
-            posuere nisi vel volutpat cursus. Lorem ipsum dolor sit amet,
-            consectetur adipiscing elit. Phasellus pharetra lacus tincidunt ex
-            ornare, non sodales sem elementum. Fusce egestas efficitur metus,
-            non malesuada orci aliquet vitae.
+            Synrec is built around one core idea. Describe the movie you want to
+            watch, and let AI find it for you. Type a story, a mood, or a plot
+            idea in English or Indonesian, and Synrec matches it against
+            thousands of film synopses to return the closest recommendations. No
+            algorithm deciding what is trending, no endless scrolling. Just you
+            describing what you want, and the AI doing the rest.
           </p>
         </div>
 
