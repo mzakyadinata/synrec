@@ -6,13 +6,14 @@ import FilmCarousel from "../components/FilmCarousel";
 import MovieOverlay from "../components/MovieOverlay";
 import { useAuth } from "../context/useAuth";
 import { useFavorites } from "../hooks/useFavorites";
-import { fetchPopularMovies } from "../services/movieApi";
+import { fetchPopularMovies, fetchMovieTrailer } from "../services/movieApi";
 import {
   readCache,
   writeCache,
   readLastRecommendations,
 } from "../utils/recommendationCache";
 import { Typewriter } from "react-simple-typewriter";
+import TrailerModal from "../components/TrailerModal";
 
 // ── localStorage helpers ──────────────────────────────────────
 const POPULAR_KEY = "synrec_popular";
@@ -27,6 +28,23 @@ export default function Dashboard() {
   const [popularLoading, setPopularLoading] = useState(true);
   const [lastRecs, setLastRecs] = useState(null); // null = expired/none, [] = empty, [...] = data
   const [activeFilm, setActiveFilm] = useState(null);
+  const [trailerUrl, setTrailerUrl] = useState(null);
+  const [loadingTrailer, setLoadingTrailer] = useState(false);
+
+  const handleWatchTrailer = async (movieId) => {
+    try {
+      setLoadingTrailer(true);
+
+      const data = await fetchMovieTrailer(movieId);
+      setActiveFilm(null);
+      setTrailerUrl(data.trailer_url);
+    } catch (err) {
+      console.error(err);
+      alert("Trailer unavailable");
+    } finally {
+      setLoadingTrailer(false);
+    }
+  };
 
   // Greeting
   const greeting = () => {
@@ -239,6 +257,13 @@ export default function Dashboard() {
         onClose={() => setActiveFilm(null)}
         isFavorited={activeFilm ? isFavorited(activeFilm.id) : false}
         onToggleFavorite={toggleFavorite}
+        onWatchTrailer={handleWatchTrailer}
+        loadingTrailer={loadingTrailer}
+      />
+
+      <TrailerModal
+        trailerUrl={trailerUrl}
+        onClose={() => setTrailerUrl(null)}
       />
     </div>
   );

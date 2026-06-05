@@ -3,7 +3,7 @@ import {
   Home,
   Info,
   Sparkles,
-  // Search,
+  Search,
   Heart,
   LogOut,
 } from "lucide-react";
@@ -20,7 +20,7 @@ const guestLinks = [
 
 const authLinks = [
   { icon: Home, label: "Home", scrollId: null, path: "/" },
-  // { icon: Search, label: "Search", scrollId: null, path: "/search" },
+  { icon: Search, label: "Search", scrollId: null, path: "/search" },
   { icon: Heart, label: "Favorites", scrollId: null, path: "/favorites" },
 ];
 
@@ -183,7 +183,7 @@ export default function Navbar() {
                   </span>
                 </div>
 
-                <span className="text-white/80 text-sm font-medium max-w-[90px] truncate">
+                <span className="text-white/80 text-sm font-medium max-w-22.5 truncate">
                   {user?.username}
                 </span>
               </div>

@@ -38,6 +38,7 @@ export default function RecommendationsPage() {
   // If no movies in state redirect back to pick-favorites
   if (!movies.length) {
     navigate("/pick-favorites");
+    console.log("NO FILM!");
     return null;
   }
 

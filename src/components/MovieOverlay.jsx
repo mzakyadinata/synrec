@@ -10,6 +10,8 @@ export default function MovieOverlay({
   onClose,
   isFavorited,
   onToggleFavorite,
+  onWatchTrailer,
+  loadingTrailer,
 }) {
   if (!film) return null;
 
@@ -83,14 +85,16 @@ export default function MovieOverlay({
 
           <div className="flex items-center gap-3">
             <button
+              onClick={() => onWatchTrailer?.(film.id)}
+              disabled={loadingTrailer}
               className="flex-1 py-2.5 rounded-full font-heading font-semibold text-white text-sm
-                tracking-wide transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
+                tracking-wide transition-all duration-200 hover:brightness-110 active:scale-[0.98] cursor-pointer"
               style={{
                 background:
                   "linear-gradient(to right, #DB1F2ECC 0%, #FF3D3D 40%, #DB1F2ECC 100%)",
               }}
             >
-              Watch Now
+              {loadingTrailer ? "Loading..." : "Watch Trailer"}
             </button>
 
             {/* Heart */}

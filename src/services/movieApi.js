@@ -61,3 +61,27 @@ export async function checkFavorite(movieId) {
   if (!res.ok) throw new Error(data.message || "Failed to check favorite");
   return data.isFavorite;
 }
+
+// GET /api/movies/:movieId/trailer
+export async function fetchMovieTrailer(movieId) {
+  const res = await fetch(`${BASE_URL}/movies/${movieId}/trailer`);
+
+  const data = await res.json();
+
+  if (!res.ok) throw new Error(data.message || "Failed to fetch trailer");
+
+  return data;
+}
+
+// GET /api/movies/search?query=batman
+export async function searchMovies(query) {
+  const res = await fetch(
+    `${BASE_URL}/movies/search?query=${encodeURIComponent(query)}`
+  );
+
+  const data = await res.json();
+
+  if (!res.ok) throw new Error(data.message || "Failed to search movies");
+
+  return data;
+}

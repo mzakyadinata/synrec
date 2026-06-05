@@ -7,6 +7,7 @@ import SignUp from "../pages/SignUp";
 import PickFavorites from "../pages/PickFavorites";
 import RecommendationsPage from "../pages/RecommendationsPage";
 import FavoritesPage from "../pages/FavoritesPage";
+import SearchPage from "../pages/SearchPage";
 import NotFound from "../pages/NotFound";
 
 function AppRoutes() {
@@ -63,6 +64,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <FavoritesPage />
+          </ProtectedRoute>
+        }
+      />
+      {/* Protected pages */}
+      <Route
+        path="/search"
+        element={
+          <ProtectedRoute>
+            <SearchPage />
           </ProtectedRoute>
         }
       />
