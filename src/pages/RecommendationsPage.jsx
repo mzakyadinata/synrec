@@ -5,6 +5,8 @@ import Navbar from "../components/Navbar";
 import FilmCard from "../components/FilmCard";
 import MovieOverlay from "../components/MovieOverlay";
 import { useFavorites } from "../hooks/useFavorites";
+import TrailerModal from "../components/TrailerModal";
+import { fetchMovieTrailer } from "../services/movieApi";
 
 const IMAGE_BASE = import.meta.env.VITE_TMDB_IMAGE_BASE_URL;
 const BACKDROP_BASE = import.meta.env.VITE_TMDB_BACKDROP_BASE_URL;
@@ -31,7 +33,8 @@ export default function RecommendationsPage() {
   const { isFavorited, toggleFavorite } = useFavorites();
   const [activeFilm, setActiveFilm] = useState(null);
   const carouselRef = useRef(null);
-
+  const [trailerUrl, setTrailerUrl] = useState(null);
+  const [loadingTrailer, setLoadingTrailer] = useState(false);
   const rawMovies = state?.movies || [];
   const movies = rawMovies.map(normaliseMovie).filter(Boolean);
 
@@ -44,6 +47,21 @@ export default function RecommendationsPage() {
 
   const hero = movies[0];
   const carousel = movies.slice(1);
+
+  const handleWatchTrailer = async (movieId) => {
+    try {
+      setLoadingTrailer(true);
+
+      const data = await fetchMovieTrailer(movieId);
+      setActiveFilm(null);
+      setTrailerUrl(data.trailer_url);
+    } catch (err) {
+      console.error(err);
+      alert("Trailer unavailable");
+    } finally {
+      setLoadingTrailer(false);
+    }
+  };
 
   const scrollCarousel = (dir) =>
     carouselRef.current?.scrollBy({
@@ -124,6 +142,8 @@ export default function RecommendationsPage() {
 
             <div className="flex items-center flex-wrap gap-3">
               <button
+                onClick={() => handleWatchTrailer(hero.id)}
+                disabled={loadingTrailer}
                 className="px-8 py-3 rounded-full font-heading font-bold text-white text-sm
                   tracking-wide transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
                 style={{
@@ -131,11 +151,9 @@ export default function RecommendationsPage() {
                     "linear-gradient(to right, #DB1F2ECC 0%, #FF3D3D 40%, #DB1F2ECC 100%)",
                 }}
               >
-                Watch Now
+                {loadingTrailer ? "Loading..." : "Watch Trailer"}
               </button>
-              <button className="px-8 py-3 text-sm font-semibold tracking-wide transition-all duration-200 border rounded-full font-heading text-white/70 border-white/20 bg-white/5 hover:bg-white/10 hover:text-white">
-                Trailer
-              </button>
+
               {/* Heart for hero film */}
               <button
                 onClick={() => toggleFavorite(hero.id)}
@@ -205,6 +223,12 @@ export default function RecommendationsPage() {
         onClose={() => setActiveFilm(null)}
         isFavorited={activeFilm ? isFavorited(activeFilm.id) : false}
         onToggleFavorite={toggleFavorite}
+        onWatchTrailer={handleWatchTrailer}
+        loadingTrailer={loadingTrailer}
+      />
+      <TrailerModal
+        trailerUrl={trailerUrl}
+        onClose={() => setTrailerUrl(null)}
       />
     </div>
   );
