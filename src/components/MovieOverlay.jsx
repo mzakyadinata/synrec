@@ -72,11 +72,11 @@ export default function MovieOverlay({
             {genres && (
               <span className="text-xs text-white/30 font-body">{genres}</span>
             )}
-            {film.similarity_score != null && (
+            {/* {film.similarity_score != null && (
               <span className="text-xs font-semibold text-secondary font-body">
                 {Math.round(film.similarity_score * 100)}% Match
               </span>
-            )}
+            )} */}
           </div>
 
           <p className="mb-5 text-sm leading-6 text-white/50 font-body line-clamp-4">
