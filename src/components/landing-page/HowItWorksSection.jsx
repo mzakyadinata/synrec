@@ -5,7 +5,7 @@ const howItWorks = [
     step: "01",
     icon: Film,
     title: "Choose Your Preferences",
-    desc: "Select your favorite genres, moods, and movie styles.",
+    desc: "Describe your ideal movie or choose a story template.",
     gradient:
       "linear-gradient(139deg, rgba(219,31,46,0.65) 0%, rgba(26,26,26,.9) 100%)",
     glowColor: "rgba(219,31,46,0.35)",
